@@ -1,0 +1,6 @@
+**/__pycache__
+.env
+*.txt
+out.json
+test.py
+
