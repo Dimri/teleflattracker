@@ -7,7 +7,6 @@ from message_processor import MessageProcessor
 from schema import DATA_SCHEMA
 from tg_extractor import TelegramExtractor
 
-from itertools import chain
 
 GROUP_NAMES = ["Megapolis_Hinjewadi_Pune"]
 
@@ -46,27 +45,26 @@ class Orchestrator:
         with open("out.json", "w") as f:
             json.dump(structured_data, f, indent=4)
 
-        # flatten the structured_data list
-        structured_data = list(
-            chain.from_iterable(
-                data if isinstance(data, list) else [data] for data in structured_data
-            )
-        )
-
         # prepare final data for storage
         final_data = []
         for i, data in enumerate(structured_data):
             data["original_message"] = processed_messages[i]
+            print(data)
             final_data.append(data)
 
         # store in database
         await self.db_manager.store_messages(final_data)
         return len(final_data)
 
+    async def run(self):
+        await self.initialize()
+        a = await self.process_batch(1)
+        return a
+
 
 async def main():
     orc = Orchestrator()
-    ans = await orc.process_batch(10)
+    ans = await orc.run()
     print(ans)
 
 

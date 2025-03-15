@@ -1,7 +1,5 @@
-from datetime import datetime
-
 from sqlalchemy import JSON, Column, DateTime, Integer, String
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker
+from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped
 
 
@@ -13,8 +11,9 @@ class MessageData(Base):
     __tablename__ = "message_data"
     id: Mapped[int] = Column(Integer, primary_key=True)
     raw_text: Mapped[str] = Column(String)
+    date = Column(DateTime)
+    author: Mapped[str] = Column(String)
     structured_data = Column(JSON)
-    processed_at = Column(DateTime, default=datetime.now())
 
 
 class DatabaseManager:
@@ -34,9 +33,12 @@ class DatabaseManager:
             async with session.begin():
                 for data in processed_data:
                     message = MessageData(
+                        date=data.get("original_message", {}).get("date"),
                         raw_text=data.get("original_message", {}).get("text", ""),
-                        structured_data=data.get("structured_data"),
-                        processed_at=datetime.now(),
+                        author=data.get("original_message", {}).get("sender_name", ""),
+                        structured_data={
+                            k: v for k, v in data.items() if k != "original_message"
+                        },
                     )
                     session.add(message)
             await session.commit()

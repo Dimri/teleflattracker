@@ -11,10 +11,6 @@ class MessageProcessor:
         """clean and normalize a single message"""
         processed = message.copy()
 
-        # convert date to ISO format string
-        if isinstance(processed.get("date"), datetime):
-            processed["date"] = processed["date"].isoformat()
-
         # clean text: remove emojis, and extra newlines
         if processed.get("text"):
             processed["text"] = self._clean_text(processed["text"])
