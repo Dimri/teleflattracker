@@ -1,5 +1,3 @@
-from datetime import datetime
-
 import emoji
 
 
@@ -26,6 +24,8 @@ class MessageProcessor:
 
     def _clean_text(self, text: str) -> str:
         """clean message text"""
+        # remove nbsp with regular space
+        text = text.replace("\xa0", " ")
         # remove emojis and strip whitespaces at the ends
         return emoji.replace_emoji(text, "").strip()
 
@@ -39,9 +39,12 @@ class MessageProcessor:
         processed_messages = [
             self.preprocess_message(msg) for msg in messages if self.filter_message(msg)
         ]
-        self.processed_count += len(processed_messages)
-        print(f"Processed {len(processed_messages)} messages")
-        return processed_messages
+        # remove duplicate messages
+        unique_dicts = {d["text"]: d for d in processed_messages}.values()
+        unique_dicts = list(unique_dicts)
+        self.processed_count += len(unique_dicts)
+        print(f"Processed {len(unique_dicts)} messages")
+        return unique_dicts
 
 
 if __name__ == "__main__":

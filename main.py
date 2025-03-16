@@ -1,4 +1,3 @@
-import json
 import asyncio
 
 from database_manager import DatabaseManager
@@ -7,7 +6,6 @@ from message_processor import MessageProcessor
 from schema import DATA_SCHEMA
 from tg_extractor import TelegramExtractor
 
-
 GROUP_NAMES = ["Megapolis_Hinjewadi_Pune"]
 
 
@@ -15,14 +13,30 @@ class Orchestrator:
     def __init__(self) -> None:
         self.telegram_extractor = TelegramExtractor(channel_name=GROUP_NAMES[0])
         self.message_processor = MessageProcessor()
-        self.llm_processor = LLMProcessor()
         self.db_manager = DatabaseManager()
+        self.llm_processor = LLMProcessor()
         self.schema = DATA_SCHEMA
+
+    async def cache_check(self, message: dict) -> bool:
+        """Check if the message has already been stored in DB"""
+        cached_data = await self.db_manager.get_message_by_text(message)
+        if cached_data:
+            # if a cache hit happens, then update the date of the message with the latest one
+            # convert both datetimes to offset naive i.e. without timezone information
+            if cached_data["original_message"]["date"] < message["date"].replace(
+                tzinfo=None
+            ):
+                await self.db_manager.update_record_timestamp(
+                    cached_data["original_message"]["id"], message["date"]
+                )
+            sender_name = cached_data.get("original_message").get("author")
+            print(f"Cache hit. Sender name: {sender_name}")
+            return False
+        return True
 
     async def initialize(self) -> None:
         """initialize all components"""
         await self.db_manager.initialize()
-        print("All components initialized")
 
     async def process_batch(self, batch_size: int = 50, offset_id: int = 0) -> int:
         """Process a batch of messages end to end"""
@@ -37,18 +51,18 @@ class Orchestrator:
         # preprocess messages
         processed_messages = self.message_processor.batch_process(raw_messages)
 
-        # structured data
-        structured_data = self.llm_processor.batch_process(
-            processed_messages, self.schema
-        )
+        # cache check
+        cache_misses = [
+            message for message in processed_messages if await self.cache_check(message)
+        ]
 
-        with open("out.json", "w") as f:
-            json.dump(structured_data, f, indent=4)
+        # structured data
+        structured_data = self.llm_processor.batch_process(cache_misses, self.schema)
 
         # prepare final data for storage
         final_data = []
         for i, data in enumerate(structured_data):
-            data["original_message"] = processed_messages[i]
+            data["original_message"] = cache_misses[i]
             print(data)
             final_data.append(data)
 
@@ -56,15 +70,15 @@ class Orchestrator:
         await self.db_manager.store_messages(final_data)
         return len(final_data)
 
-    async def run(self):
+    async def run(self, batch_size: int = 10):
         await self.initialize()
-        a = await self.process_batch(1)
+        a = await self.process_batch(batch_size)
         return a
 
 
 async def main():
     orc = Orchestrator()
-    ans = await orc.run()
+    ans = await orc.run(30)
     print(ans)
 
 

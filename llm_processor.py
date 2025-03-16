@@ -1,10 +1,10 @@
-import re
 import json
 import os
+import re
 
-from tqdm import tqdm
 from dotenv import load_dotenv
 from openai import OpenAI
+from tqdm import tqdm
 
 load_dotenv()
 
