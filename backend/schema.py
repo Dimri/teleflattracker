@@ -10,4 +10,5 @@ DATA_SCHEMA = {
     "Furnished": "Is flat furnished or unfurnished or semi-furnished (string)",
     "Brokerage": "the amount of brokerage needs to be given. If no brokerage is required set to 0 (integer)",
     "AvailableDate": "date/time period from which the flat is availabe (time)",
+    "ContactDetail": "phone number / or DM on telegram (string)",
 }
