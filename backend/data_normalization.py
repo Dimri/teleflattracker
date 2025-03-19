@@ -14,12 +14,6 @@ conn.close()
 dicts = master_df["structured_data"].apply(lambda x: json.loads(x)).to_list()
 df = pd.DataFrame(dicts)
 
-print(df.shape)
-print(df.head())
-
-# -------------------------
-print(df.columns)
-
 
 def map_bedroom(text: str) -> str:
     mappa = {
@@ -125,7 +119,6 @@ def cleanse(df: pd.DataFrame) -> pd.DataFrame:
 
 df = df.fillna("")
 df = cleanse(df)
-print(df["Furnished"])
 cleaned_dicts = df.to_dict(orient="records")
 master_df["structured_data"] = [json.dumps(x) for x in cleaned_dicts]
 
@@ -142,7 +135,6 @@ mask = (
     .str.contains("lead|car rental|external", regex=True)
 )
 filter_df = master_df[~(mask)]
-# print(filter_df)
 
 # save to database only if "-s" flag is passed
 if len(sys.argv) > 1 and sys.argv[1] == "-s":
@@ -151,5 +143,6 @@ if len(sys.argv) > 1 and sys.argv[1] == "-s":
     print("SAVING")
     shutil.copy("telegram_data.db", "telegram_data_backup_2.db")
     conn = sqlite3.connect("telegram_data.db")
-    filter_df.to_sql("message_data", conn, if_exists="replace", index=False)
+    conn.execute("DELETE FROM message_data;")
+    filter_df.to_sql("message_data", conn, if_exists="append", index=False)
     conn.close()

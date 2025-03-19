@@ -3,3 +3,15 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  :root {
+    --primary: 0 0% 0%; /* Black */
+    --primary-foreground: 0 0% 100%; /* White for text/icons on primary background */
+  }
+
+  .dark {
+    --primary: 0 0% 0%; /* Black for dark mode */
+    --primary-foreground: 0 0% 100%; /* White for dark mode */
+  }
+}

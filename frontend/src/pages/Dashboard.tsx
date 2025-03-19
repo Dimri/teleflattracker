@@ -19,14 +19,14 @@ import {
 import { formatDistanceToNow, parseISO } from "date-fns";
 import {
   FunnelIcon,
-  ChevronUpIcon,
-  ChevronDownIcon,
   NoSymbolIcon, // For NO_NONVEG
   BeakerIcon, // For NO_DRINKING (replacing WineBottleIcon)
   FireIcon, // For NO_SMOKING
   UserGroupIcon, // For NO_BOYS
   CheckCircleIcon,
 } from "@heroicons/react/20/solid";
+import Slider from "rc-slider"; // Import rc-slider
+import "rc-slider/assets/index.css"; // Import rc-slider CSS
 
 interface Message {
   id: number;
@@ -59,11 +59,11 @@ const Dashboard: React.FC = () => {
     Sharing: string; // "true", "false", or "" for no filter
     Gender: string;
     Address: string;
-    Rent: number | null;
-    Deposit: number | null;
+    Rent: { min: number | null; max: number | null };
+    Deposit: { min: number | null; max: number | null };
     Restrictions: string;
     Furnished: string;
-    Brokerage: number | null;
+    Brokerage: { min: number | null; max: number | null };
     AvailableDate: string;
     time_created: string;
     author: string;
@@ -74,11 +74,11 @@ const Dashboard: React.FC = () => {
     Sharing: "",
     Gender: "",
     Address: "",
-    Rent: null,
-    Deposit: null,
+    Rent: { min: null, max: null },
+    Deposit: { min: null, max: null },
     Restrictions: "",
     Furnished: "",
-    Brokerage: null,
+    Brokerage: { min: null, max: null },
     AvailableDate: "",
     time_created: "",
     author: "",
@@ -130,6 +130,20 @@ const Dashboard: React.FC = () => {
     loadMessages();
   }, []);
 
+  // Define range bounds (adjust these based on your data)
+  const rentRange = { min: 0, max: 50000 };
+  const depositRange = { min: 0, max: 100000 };
+  const brokerageRange = { min: 0, max: 50000 };
+
+  // Handler for range filter changes
+  const handleRangeFilterChange =
+    (key: "Rent" | "Deposit" | "Brokerage") => (value: number[]) => {
+      setFilters((prev) => ({
+        ...prev,
+        [key]: { min: value[0], max: value[1] },
+      }));
+    };
+
   // Function to trim text to a fixed length
   const trimText = (text: string, maxLength: number = 50): string => {
     if (text.length <= maxLength) return text;
@@ -143,11 +157,6 @@ const Dashboard: React.FC = () => {
 
   // Function to filter messages
   const filteredMessages = messages.filter((msg) => {
-    // console.log(msg.details.Gender);
-    // console.log(filters.Gender);
-
-    console.log(msg.details.Sharing);
-    console.log(filters.Sharing);
     return (
       (filters.BHK === null || msg.details.BHK === filters.BHK) &&
       (filters.Bedroom === "" ||
@@ -171,8 +180,14 @@ const Dashboard: React.FC = () => {
         msg.details.Address.toLowerCase().includes(
           filters.Address.toLowerCase()
         )) &&
-      (filters.Rent === null || msg.details.Rent === filters.Rent) &&
-      (filters.Deposit === null || msg.details.Deposit === filters.Deposit) &&
+      (filters.Rent.min === null ||
+        Number(msg.details.Rent) >= filters.Rent.min) &&
+      (filters.Rent.max === null ||
+        Number(msg.details.Rent) <= filters.Rent.max) &&
+      (filters.Deposit.min === null ||
+        Number(msg.details.Deposit) >= filters.Deposit.min) &&
+      (filters.Deposit.max === null ||
+        Number(msg.details.Deposit) <= filters.Deposit.max) &&
       (filters.Restrictions === "" ||
         (filters.Restrictions === "NONE" &&
           msg.details.Restrictions.includes("NONE")) ||
@@ -191,8 +206,10 @@ const Dashboard: React.FC = () => {
           msg.details.Furnished === "UNFURNISHED") ||
         (filters.Furnished === "SEMIFURNISHED" &&
           msg.details.Furnished === "SEMIFURNISHED")) &&
-      (filters.Brokerage === null ||
-        msg.details.Brokerage === filters.Brokerage) &&
+      (filters.Brokerage.min === null ||
+        msg.details.Brokerage >= filters.Brokerage.min) &&
+      (filters.Brokerage.max === null ||
+        msg.details.Brokerage <= filters.Brokerage.max) &&
       (filters.AvailableDate === "" ||
         msg.details.AvailableDate.toLowerCase().includes(
           filters.AvailableDate.toLowerCase()
@@ -247,9 +264,9 @@ const Dashboard: React.FC = () => {
   };
 
   const genderStyles = {
-    Male: "bg-green-100 text-blue-800",
+    Male: "bg-blue-100 text-blue-800",
     Female: "bg-red-100 text-red-800",
-    Family: "bg-blue-100 text-green-800",
+    Family: "bg-green-100 text-green-800",
   } as const;
 
   // Ensure only valid keys are used
@@ -465,13 +482,32 @@ const Dashboard: React.FC = () => {
                           </button>
                         </div>
                         {filterVisibility.Rent && (
-                          <Input
-                            type="number"
-                            placeholder="Filter Rent..."
-                            value={filters.Rent ?? ""}
-                            onChange={handleNumberFilterChange("Rent")}
-                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all"
-                          />
+                          <div className="mt-2 px-2">
+                            <Slider
+                              range
+                              min={rentRange.min}
+                              max={rentRange.max}
+                              step={1000}
+                              defaultValue={[rentRange.min, rentRange.max]}
+                              value={[
+                                filters.Rent.min ?? rentRange.min,
+                                filters.Rent.max ?? rentRange.max,
+                              ]}
+                              onChange={
+                                handleRangeFilterChange("Rent") as (
+                                  value: number[]
+                                ) => void
+                              }
+                              styles={{
+                                track: { backgroundColor: "#4f46e5" },
+                                handle: { borderColor: "#4f46e5" },
+                              }}
+                            />
+                            <div className="flex justify-between mt-2 text-xs text-gray-600 space-x-4">
+                              <span>₹{filters.Rent.min ?? rentRange.min}</span>
+                              <span>₹{filters.Rent.max ?? rentRange.max}</span>
+                            </div>
+                          </div>
                         )}
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700 py-4">
@@ -484,13 +520,39 @@ const Dashboard: React.FC = () => {
                           </button>
                         </div>
                         {filterVisibility.Deposit && (
-                          <Input
-                            type="number"
-                            placeholder="Filter Deposit..."
-                            value={filters.Deposit ?? ""}
-                            onChange={handleNumberFilterChange("Deposit")}
-                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all"
-                          />
+                          <div className="mt-2 px-2">
+                            <Slider
+                              range
+                              min={depositRange.min}
+                              max={depositRange.max}
+                              step={1000}
+                              defaultValue={[
+                                depositRange.min,
+                                depositRange.max,
+                              ]}
+                              value={[
+                                filters.Deposit.min ?? depositRange.min,
+                                filters.Deposit.max ?? depositRange.max,
+                              ]}
+                              onChange={
+                                handleRangeFilterChange("Deposit") as (
+                                  value: number[]
+                                ) => void
+                              }
+                              styles={{
+                                track: { backgroundColor: "#4f46e5" },
+                                handle: { borderColor: "#4f46e5" },
+                              }}
+                            />
+                            <div className="flex justify-between mt-2 text-xs text-gray-600 space-x-4">
+                              <span>
+                                ₹{filters.Deposit.min ?? depositRange.min}
+                              </span>
+                              <span>
+                                ₹{filters.Deposit.max ?? depositRange.max}
+                              </span>
+                            </div>
+                          </div>
                         )}
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700 py-4">
@@ -555,13 +617,39 @@ const Dashboard: React.FC = () => {
                           </button>
                         </div>
                         {filterVisibility.Brokerage && (
-                          <Input
-                            type="number"
-                            placeholder="Filter Brokerage..."
-                            value={filters.Brokerage ?? ""}
-                            onChange={handleNumberFilterChange("Brokerage")}
-                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all"
-                          />
+                          <div className="mt-2 px-2">
+                            <Slider
+                              range
+                              min={brokerageRange.min}
+                              max={brokerageRange.max}
+                              step={1000}
+                              defaultValue={[
+                                brokerageRange.min,
+                                brokerageRange.max,
+                              ]}
+                              value={[
+                                filters.Brokerage.min ?? brokerageRange.min,
+                                filters.Brokerage.max ?? brokerageRange.max,
+                              ]}
+                              onChange={
+                                handleRangeFilterChange("Brokerage") as (
+                                  value: number[]
+                                ) => void
+                              }
+                              styles={{
+                                track: { backgroundColor: "#4f46e5" },
+                                handle: { borderColor: "#4f46e5" },
+                              }}
+                            />
+                            <div className="flex justify-between mt-2 text-xs text-gray-600 space-x-4">
+                              <span>
+                                ₹{filters.Brokerage.min ?? brokerageRange.min}
+                              </span>
+                              <span>
+                                ₹{filters.Brokerage.max ?? brokerageRange.max}
+                              </span>
+                            </div>
+                          </div>
                         )}
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700 py-4">
