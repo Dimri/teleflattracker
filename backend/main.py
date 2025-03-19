@@ -29,7 +29,7 @@ class Orchestrator:
                 await self.db_manager.update_record_timestamp(
                     cached_data["original_message"]["id"], message["date"]
                 )
-            sender_name = cached_data.get("original_message").get("author")
+            sender_name = cached_data.get("original_message", {}).get("author", "")
             print(f"Cache hit. Sender name: {sender_name}")
             return False
         return True
@@ -62,9 +62,13 @@ class Orchestrator:
         # prepare final data for storage
         final_data = []
         for i, data in enumerate(structured_data):
-            data["original_message"] = cache_misses[i]
-            print(data)
-            final_data.append(data)
+            if isinstance(data, list):
+                for d in data:
+                    d["original_message"] = cache_misses[i]
+                    final_data.append(d)
+            else:
+                data["original_message"] = cache_misses[i]
+                final_data.append(data)
 
         # store in database
         await self.db_manager.store_messages(final_data)
@@ -78,7 +82,7 @@ class Orchestrator:
 
 async def main():
     orc = Orchestrator()
-    ans = await orc.run(30)
+    ans = await orc.run(50)
     print(ans)
 
 

@@ -38,7 +38,12 @@ class LLMProcessor:
                 },
             ],
         )
-        return completion.choices[0].message.content
+        print(completion)
+        try:
+            return completion.choices[0].message.content
+        except Exception as e:
+            print(f"Exception occured: {e}")
+            return None
 
     def _build_prompt(self, message: dict, schema: dict) -> str:
         schema_description = "\n".join(

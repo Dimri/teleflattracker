@@ -1,7 +1,9 @@
-from fastapi import FastAPI, Depends
-from fastapi.middleware.cors import CORSMiddleware
-import sqlite3
 import json
+import math
+import sqlite3
+
+from fastapi import Depends, FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 
 app = FastAPI()
 
@@ -24,6 +26,13 @@ def get_db():
         conn.close()
 
 
+def sanitize_floats(value):
+    if isinstance(value, float):
+        if not math.isfinite(value):
+            return False
+    return True
+
+
 @app.get("/messages")
 def get_messages(db: sqlite3.Connection = Depends(get_db)):
     cursor = db.cursor()
@@ -38,6 +47,8 @@ def get_messages(db: sqlite3.Connection = Depends(get_db)):
         }
         for row in cursor.fetchall()
     ]
-    print(messages[0])
+    for msg in messages:
+        print(msg["details"])
+    messages = [msg for msg in messages if sanitize_floats(msg["details"]["BHK"])]
     print(f"Returning object with length: {len(messages)}")
     return messages

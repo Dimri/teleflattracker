@@ -9,8 +9,8 @@ class MessageProcessor:
         """clean and normalize a single message"""
         processed = message.copy()
 
-        # clean text: remove emojis, and extra newlines
         if processed.get("text"):
+            # clean text: remove emojis, and extra newlines
             processed["text"] = self._clean_text(processed["text"])
 
         # create a new key name that consist of first name + last name
@@ -32,7 +32,9 @@ class MessageProcessor:
     def filter_message(self, message: dict[str, str]) -> bool:
         flag1 = len(message["text"]) > 50
         flag2 = "changed" not in message["text"].lower()
-        return flag1 and flag2
+        flag3 = "lead" not in message["text"].lower()
+        flag4 = "external" not in message["text"].lower()
+        return flag1 and flag2 and flag3 and flag4
 
     def batch_process(self, messages: list[dict]) -> list[dict]:
         """Process a batch of messages"""
@@ -40,8 +42,7 @@ class MessageProcessor:
             self.preprocess_message(msg) for msg in messages if self.filter_message(msg)
         ]
         # remove duplicate messages
-        unique_dicts = {d["text"]: d for d in processed_messages}.values()
-        unique_dicts = list(unique_dicts)
+        unique_dicts = list({d["text"]: d for d in processed_messages}.values())
         self.processed_count += len(unique_dicts)
         print(f"Processed {len(unique_dicts)} messages")
         return unique_dicts

@@ -16,12 +16,12 @@ def to_dict(obj):
 
 class MessageData(Base):
     __tablename__ = "message_data"
-    id: Mapped[int] = mapped_column(Integer, primary_key=True)
-    raw_text: Mapped[str] = mapped_column(String)
-    date: Mapped[datetime] = mapped_column(DateTime)
-    author: Mapped[str] = mapped_column(String)
 
-    structured_data = mapped_column(JSON)
+    id: Mapped[int] = mapped_column(Integer, primary_key=True)
+    raw_text: Mapped[str] = mapped_column(String, nullable=True)
+    date: Mapped[datetime] = mapped_column(DateTime, nullable=True)
+    author: Mapped[str] = mapped_column(String, nullable=True)
+    structured_data: Mapped[dict] = mapped_column(JSON, nullable=True)
 
 
 class DatabaseManager:

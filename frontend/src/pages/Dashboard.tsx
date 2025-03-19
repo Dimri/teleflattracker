@@ -17,7 +17,16 @@ import {
   CardTitle,
 } from "@/components/ui/ui/card";
 import { formatDistanceToNow, parseISO } from "date-fns";
-import { FunnelIcon } from "@heroicons/react/20/solid";
+import {
+  FunnelIcon,
+  ChevronUpIcon,
+  ChevronDownIcon,
+  NoSymbolIcon, // For NO_NONVEG
+  BeakerIcon, // For NO_DRINKING (replacing WineBottleIcon)
+  FireIcon, // For NO_SMOKING
+  UserGroupIcon, // For NO_BOYS
+  CheckCircleIcon,
+} from "@heroicons/react/20/solid";
 
 interface Message {
   id: number;
@@ -28,12 +37,12 @@ interface Message {
     BHK: number;
     Bedroom: string;
     Sharing: boolean;
-    Gender: string;
+    Gender: string[];
     Address: string;
-    Rent: number;
-    Restrictions: string;
+    Rent: number | string;
+    Restrictions: string[];
     Furnished: string;
-    Deposit: number;
+    Deposit: number | string;
     Brokerage: number;
     AvailableDate: string;
     ContactDetail: string;
@@ -142,16 +151,22 @@ const Dashboard: React.FC = () => {
     return (
       (filters.BHK === null || msg.details.BHK === filters.BHK) &&
       (filters.Bedroom === "" ||
-        msg.details.Bedroom.toLowerCase().includes(
-          filters.Bedroom.toLowerCase()
-        )) &&
+        (filters.Bedroom === "Hall" && msg.details.Bedroom === "Hall") ||
+        (filters.Bedroom === "Non-master Bedroom" &&
+          msg.details.Bedroom === "Non-master Bedroom") ||
+        (filters.Bedroom === "Master Bedroom" &&
+          msg.details.Bedroom === "Master Bedroom") ||
+        (filters.Bedroom === "Single" && msg.details.Bedroom === "Single") ||
+        (filters.Bedroom === "Double" && msg.details.Bedroom === "Double")) &&
       (filters.Sharing === "" ||
         (filters.Sharing === "true" && msg.details.Sharing) ||
         (filters.Sharing === "false" && !msg.details.Sharing)) &&
       (filters.Gender === "" ||
-        (filters.Gender === "Male" && msg.details.Gender === "Male") ||
-        (filters.Gender === "Female" && msg.details.Gender === "Female") ||
-        (filters.Gender === "Family" && msg.details.Gender === "Family")) &&
+        (filters.Gender === "Male" && msg.details.Gender.includes("Male")) ||
+        (filters.Gender === "Female" &&
+          msg.details.Gender.includes("Female")) ||
+        (filters.Gender === "Family" &&
+          msg.details.Gender.includes("Family"))) &&
       (filters.Address === "" ||
         msg.details.Address.toLowerCase().includes(
           filters.Address.toLowerCase()
@@ -159,13 +174,23 @@ const Dashboard: React.FC = () => {
       (filters.Rent === null || msg.details.Rent === filters.Rent) &&
       (filters.Deposit === null || msg.details.Deposit === filters.Deposit) &&
       (filters.Restrictions === "" ||
-        msg.details.Restrictions.toLowerCase().includes(
-          filters.Restrictions.toLowerCase()
-        )) &&
+        (filters.Restrictions === "NONE" &&
+          msg.details.Restrictions.includes("NONE")) ||
+        (filters.Restrictions === "NO_SMOKING" &&
+          msg.details.Restrictions.includes("NO_SMOKING")) ||
+        (filters.Restrictions === "NO_DRINKING" &&
+          msg.details.Restrictions.includes("NO_DRINKING")) ||
+        (filters.Restrictions === "NO_NONVEG" &&
+          msg.details.Restrictions.includes("NO_NONVEG")) ||
+        (filters.Restrictions === "NO_BOYS" &&
+          msg.details.Restrictions.includes("NO_BOYS"))) &&
       (filters.Furnished === "" ||
-        msg.details.Furnished.toLowerCase().includes(
-          filters.Furnished.toLowerCase()
-        )) &&
+        (filters.Furnished === "FURNISHED" &&
+          msg.details.Furnished === "FURNISHED") ||
+        (filters.Furnished === "UNFURNISHED" &&
+          msg.details.Furnished === "UNFURNISHED") ||
+        (filters.Furnished === "SEMIFURNISHED" &&
+          msg.details.Furnished === "SEMIFURNISHED")) &&
       (filters.Brokerage === null ||
         msg.details.Brokerage === filters.Brokerage) &&
       (filters.AvailableDate === "" ||
@@ -222,15 +247,71 @@ const Dashboard: React.FC = () => {
   };
 
   const genderStyles = {
-    Male: "bg-green-100 text-green-800",
+    Male: "bg-green-100 text-blue-800",
     Female: "bg-red-100 text-red-800",
-    Family: "bg-blue-100 text-blue-800",
+    Family: "bg-blue-100 text-green-800",
   } as const;
 
   // Ensure only valid keys are used
   const getGenderStyle = (gender: string): string =>
     genderStyles[gender as keyof typeof genderStyles] ||
     "bg-gray-100 text-gray-800";
+
+  const bedroomStyles = {
+    Hall: "bg-green-100 text-green-800",
+    "Non-master Bedroom": "bg-red-100 text-red-800",
+    Single: "bg-red-100 text-red-800",
+    "Master Bedroom": "bg-blue-100 text-blue-800",
+    Double: "bg-blue-100 text-blue-800",
+  } as const;
+
+  // Ensure only valid keys are used
+  const getBedroomStyle = (bedroom: string): string =>
+    bedroomStyles[bedroom as keyof typeof bedroomStyles] ||
+    "bg-gray-100 text-gray-800";
+
+  const furnishedStyles = {
+    SEMI_FURNISHED: "bg-blue-100 text-blue-800",
+    FURNISHED: "bg-green-100 text-green-800",
+    UNFURNISHED: "bg-red-100 text-red-800",
+  } as const;
+
+  // Ensure only valid keys are used
+  const getFurnishedStyle = (furnish: string): string =>
+    furnishedStyles[furnish as keyof typeof furnishedStyles] ||
+    "bg-gray-100 text-gray-800";
+
+  const getRestrictionDisplay = (restriction: string) => {
+    switch (restriction.toUpperCase()) {
+      case "NO_NONVEG":
+        return (
+          <NoSymbolIcon className="w-5 h-5 text-red-600" title="No Non-Veg" />
+        );
+      case "NO_DRINKING":
+        return (
+          <BeakerIcon className="w-5 h-5 text-red-600" title="No Drinking" />
+        );
+      case "NO_SMOKING":
+        return <FireIcon className="w-5 h-5 text-red-600" title="No Smoking" />;
+      case "NO_BOYS":
+        return (
+          <UserGroupIcon className="w-5 h-5 text-red-600" title="No Boys" />
+        );
+      case "NONE":
+        return (
+          <CheckCircleIcon
+            className="w-5 h-5 text-green-600"
+            title="No Restrictions"
+          />
+        );
+      default:
+        return (
+          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
+            {restriction}
+          </span>
+        );
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-100">
@@ -294,12 +375,21 @@ const Dashboard: React.FC = () => {
                           </button>
                         </div>
                         {filterVisibility.Bedroom && (
-                          <Input
-                            placeholder="Filter Bedroom..."
+                          <select
+                            name="Bedroom"
                             value={filters.Bedroom}
-                            onChange={handleStringFilterChange("Bedroom")}
-                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all"
-                          />
+                            onChange={handleStaticFilterChange}
+                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all w-full"
+                          >
+                            <option value="">All</option>
+                            <option value="Hall">Hall</option>
+                            <option value="Non-master Bedroom">
+                              Non-Master
+                            </option>
+                            <option value="Master Bedroom">Master</option>
+                            <option value="Single">Single</option>
+                            <option value="Double">Double</option>
+                          </select>
                         )}
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700 py-4">
@@ -415,12 +505,19 @@ const Dashboard: React.FC = () => {
                           </button>
                         </div>
                         {filterVisibility.Restrictions && (
-                          <Input
-                            placeholder="Filter Restrictions..."
+                          <select
+                            name="Restrictions"
                             value={filters.Restrictions}
-                            onChange={handleStringFilterChange("Restrictions")}
-                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all"
-                          />
+                            onChange={handleStaticFilterChange}
+                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all w-full"
+                          >
+                            <option value="">All</option>
+                            <option value="NONE">None</option>
+                            <option value="NO_SMOKING">No Smoking</option>
+                            <option value="NO_DRINKING">No Drinking</option>
+                            <option value="NO_BOYS">No Boys</option>
+                            <option value="NO_NONVEG">No Non-Veg</option>
+                          </select>
                         )}
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700 py-4">
@@ -433,12 +530,19 @@ const Dashboard: React.FC = () => {
                           </button>
                         </div>
                         {filterVisibility.Furnished && (
-                          <Input
-                            placeholder="Filter Furnished..."
+                          <select
+                            name="Furnished"
                             value={filters.Furnished}
-                            onChange={handleStringFilterChange("Furnished")}
-                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all"
-                          />
+                            onChange={handleStaticFilterChange}
+                            className="mt-2 rounded-lg border-gray-200 focus:border-indigo-500 focus:ring-indigo-200 transition-all w-full"
+                          >
+                            <option value="">All</option>
+                            <option value="FURNISHED">Furnished</option>
+                            <option value="SEMI_FURNISHED">
+                              Semi-Furnished
+                            </option>
+                            <option value="UNFURNISHED">Unfurnished</option>
+                          </select>
                         )}
                       </TableHead>
                       <TableHead className="font-semibold text-gray-700 py-4">
@@ -551,7 +655,13 @@ const Dashboard: React.FC = () => {
                             {msg.details.BHK}
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
-                            {msg.details.Bedroom}
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getBedroomStyle(
+                                msg.details.Bedroom
+                              )}`}
+                            >
+                              {msg.details.Bedroom.replace("Bedroom", "")}
+                            </span>
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
                             {msg.details.Sharing ? (
@@ -565,31 +675,70 @@ const Dashboard: React.FC = () => {
                             )}
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
-                            <span
-                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGenderStyle(
-                                msg.details.Gender
-                              )}`}
-                            >
-                              {msg.details.Gender}
-                            </span>
+                            <div className="flex flex-wrap gap-2">
+                              {Array.isArray(msg.details.Gender) ? (
+                                msg.details.Gender.map((gender, index) => (
+                                  <span
+                                    key={index}
+                                    className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGenderStyle(
+                                      gender
+                                    )}`}
+                                  >
+                                    {gender}
+                                  </span>
+                                ))
+                              ) : (
+                                <span
+                                  className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getGenderStyle(
+                                    msg.details.Gender
+                                  )}`}
+                                >
+                                  {msg.details.Gender}
+                                </span>
+                              )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
                             {msg.details.Address}
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
-                            ₹{msg.details.Rent}
+                            {msg.details.Rent
+                              ? `₹${msg.details.Rent.toLocaleString()}`
+                              : "-"}
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
-                            ₹{msg.details.Deposit}
+                            {msg.details.Deposit
+                              ? `₹${msg.details.Deposit.toLocaleString()}`
+                              : "-"}
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
-                            {msg.details.Restrictions}
+                            <div className="flex flex-wrap gap-2">
+                              {Array.isArray(msg.details.Restrictions)
+                                ? msg.details.Restrictions.map(
+                                    (restriction, index) => (
+                                      <span key={index}>
+                                        {getRestrictionDisplay(restriction)}
+                                      </span>
+                                    )
+                                  )
+                                : getRestrictionDisplay(
+                                    msg.details.Restrictions
+                                  )}
+                            </div>
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
-                            {msg.details.Furnished}
+                            <span
+                              className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getFurnishedStyle(
+                                msg.details.Furnished
+                              )}`}
+                            >
+                              {msg.details.Furnished.replace("_", "")}
+                            </span>
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
-                            ₹{msg.details.Brokerage.toLocaleString()}
+                            {msg.details.Brokerage
+                              ? `₹${msg.details.Brokerage.toLocaleString()}`
+                              : "-"}
                           </TableCell>
                           <TableCell className="text-gray-600 py-4">
                             {msg.details.AvailableDate}

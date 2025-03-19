@@ -11,12 +11,12 @@ interface Message {
     BHK: number;
     Bedroom: string;
     Sharing: boolean;
-    Gender: string;
+    Gender: string[];
     Address: string;
-    Rent: number;
-    Restrictions: string;
+    Rent: number | string;
+    Restrictions: string[];
     Furnished: string;
-    Deposit: number;
+    Deposit: number | string;
     Brokerage: number;
     AvailableDate: string;
     ContactDetail: string;
