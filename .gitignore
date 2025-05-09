@@ -3,4 +3,7 @@
 *.txt
 out.json
 test.py
+.ruff_cache
+.venv
+*.egg-info
 

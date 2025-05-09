@@ -1,0 +1,29 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "teleflattracker"
+version = "0.0.0"
+description = "Project to create a database from Telegram meesages containing data on flat/apartment available on rent."
+authors = [{ name = "Sudhanshu Dimri", email = "hhsudhanshudimri@gmail.com" }]
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.8"
+dependencies = [
+    "emoji>=2.14.1",
+    "fastapi[standard]>=0.115.12",
+    "openai>=1.78.0",
+    "pandas>=2.0.3",
+    "ruff>=0.11.8",
+    "sqlalchemy>=2.0.40",
+    "telethon>=1.40.0",
+    "tqdm>=4.67.1",
+]
+
+[tool.setuptools]
+package-dir = { "" = "src" }
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
