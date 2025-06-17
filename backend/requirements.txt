@@ -1,0 +1,8 @@
+telethon
+cryptg
+emoji
+openai
+sqlalchemy
+aiosqlite
+fastapi
+uvicorn
