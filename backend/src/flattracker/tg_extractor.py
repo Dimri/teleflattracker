@@ -1,12 +1,21 @@
 import asyncio
 import os
+from typing import TypedDict
 
 from dotenv import load_dotenv
 from telethon import TelegramClient
 
+from flattracker.config import GROUP_NAMES
+
 load_dotenv()
 
-GROUP_NAMES = ["Megapolis_Hinjewadi_Pune"]
+
+class TGResult(TypedDict):
+    id: int
+    date: str
+    text: str
+    sender_first_name: str
+    sender_last_name: str
 
 
 class TelegramExtractor:
@@ -16,11 +25,15 @@ class TelegramExtractor:
     ) -> None:
         self.channel_name = channel_name
 
-    async def extract_messages(self, limit: int = 10, offset_id: int = 0) -> list[dict]:
-        results = []
+    async def extract_messages(
+        self, limit: int = 10, offset_id: int = 0
+    ) -> list[TGResult]:
+        results: list[TGResult] = []
         try:
             async with TelegramClient(
-                "test", api_hash=os.getenv("API_HASH"), api_id=os.getenv("API_ID")
+                "test",
+                api_hash=os.getenv("API_HASH", ""),
+                api_id=os.getenv("API_ID"),  # type: ignore
             ) as client:
                 channel_info = await client.get_entity(self.channel_name)
                 messages = await client.get_messages(

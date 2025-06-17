@@ -6,4 +6,5 @@ test.py
 .ruff_cache
 .venv
 *.egg-info
+backend/.vscode
 

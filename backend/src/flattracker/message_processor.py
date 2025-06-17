@@ -1,11 +1,13 @@
 import emoji
 
+from flattracker.tg_extractor import TGResult
+
 
 class MessageProcessor:
     def __init__(self) -> None:
         self.processed_count = 0
 
-    def preprocess_message(self, message: dict) -> dict:
+    def preprocess_message(self, message: TGResult) -> dict:
         """clean and normalize a single message"""
         processed = message.copy()
 
@@ -29,16 +31,16 @@ class MessageProcessor:
         # remove emojis and strip whitespaces at the ends
         return emoji.replace_emoji(text, "").strip()
 
-    def filter_message(self, message: dict[str, str]) -> bool:
+    def filter_message(self, message: TGResult) -> bool:
         flag1 = len(message["text"]) > 50
         flag2 = "changed" not in message["text"].lower()
         flag3 = "lead" not in message["text"].lower()
         flag4 = "external" not in message["text"].lower()
         return flag1 and flag2 and flag3 and flag4
 
-    def batch_process(self, messages: list[dict]) -> list[dict]:
+    def batch_process(self, messages: list[TGResult]) -> list[dict]:
         """Process a batch of messages"""
-        processed_messages = [
+        processed_messages: list[dict] = [
             self.preprocess_message(msg) for msg in messages if self.filter_message(msg)
         ]
         # remove duplicate messages

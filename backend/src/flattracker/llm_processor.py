@@ -11,6 +11,7 @@ load_dotenv()
 
 class LLMProcessor:
     def __init__(self, api_key=os.getenv("OPENAI_API_KEY")) -> None:
+        print(f"Creating OpenAI client: {type(OpenAI)}")
         self.client = OpenAI(base_url="https://openrouter.ai/api/v1", api_key=api_key)
 
     def extract_structured_data(self, message: dict, schema: dict) -> str | None:
@@ -50,12 +51,11 @@ class LLMProcessor:
             f"- {key}: {value}" for key, value in schema.items()
         )
         return f"""Extract the following information from this message:
-        {schema_description}
-        Return the information as JSON object. If the text doesn't contain any information, leave the value field blank.
+{schema_description}
+Return the information as JSON object. If the text doesn't contain any information, leave the value field blank.
 
-        Message:
-        Text: {message.get("text")}
-        """
+Message:
+Text: {message.get("text")}"""
 
     def extract_json(self, text: str | None) -> dict:
         pat = re.compile(r"```json\s*\n([\s\S]*?)\n```")

@@ -21,7 +21,7 @@ def map_bedroom(text: str) -> str:
     return mappa.get(text.lower(), text)
 
 
-def process_gender(text: str) -> list[str]:
+def process_gender(text: str | list) -> list[str]:
     if isinstance(text, list):
         return text
     # convert to title case
@@ -34,8 +34,9 @@ def process_gender(text: str) -> list[str]:
 
 def map_restrictions(text: str | list) -> list[str]:
     if not isinstance(text, list):
-        text = text.split(",")
-    text = list(map(str.strip, text))
+        text_list = text.split(",")
+
+    text_list: list[str] = list(map(str.strip, text))  # ignore no-redef
     mappa = {
         "no smoking": "NO_SMOKING",
         "non smoker": "NO_SMOKING",
@@ -52,7 +53,7 @@ def map_restrictions(text: str | list) -> list[str]:
         "no non-vegetarian": "NO_NONVEG",
         "pure veg": "NO_NONVEG",
     }
-    out = [mappa.get(x.lower(), x) for x in text]
+    out = [mappa.get(x.lower(), x) for x in text_list]
     if "NONE" in out:
         out = ["NONE"]
 

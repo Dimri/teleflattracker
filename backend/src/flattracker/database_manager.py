@@ -5,6 +5,8 @@ from sqlalchemy import JSON, DateTime, Integer, String, select, update
 from sqlalchemy.ext.asyncio import async_sessionmaker, create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
+from flattracker.config import DB_PATH
+
 
 class Base(DeclarativeBase):
     pass
@@ -21,7 +23,7 @@ class MessageData(Base):
 
 
 class DatabaseManager:
-    def __init__(self, db_url="sqlite+aiosqlite:///telegram_data.db") -> None:
+    def __init__(self, db_url=f"sqlite+aiosqlite:///{DB_PATH}") -> None:
         self.engine = create_async_engine(db_url)
         self.session_factory = async_sessionmaker(self.engine, expire_on_commit=False)
 

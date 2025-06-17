@@ -1,12 +1,11 @@
 import asyncio
 
+from flattracker.config import GROUP_NAMES
 from flattracker.database_manager import DatabaseManager
 from flattracker.llm_processor import LLMProcessor
 from flattracker.message_processor import MessageProcessor
 from flattracker.schema import DATA_SCHEMA
 from flattracker.tg_extractor import TelegramExtractor
-
-GROUP_NAMES = ["Megapolis_Hinjewadi_Pune"]
 
 
 class Orchestrator:
